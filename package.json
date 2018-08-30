@@ -1,0 +1,17 @@
+{
+  "name": "argv-router",
+  "version": "1.0.0",
+  "description": "简单的node.js命令行参数路由分发器",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jtf": "^1.3.0"
+  }
+}
