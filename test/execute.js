@@ -18,10 +18,16 @@ test('execute', async t => {
       '-s, --sync'(argv) {
          t.ok(true)
       },
+      '-g, --global'(argv) {
+         t.ok(true)
+      },
       '-a -w'(argv) {
          t.ok(true)
       },
       '-a -s'(argv) {
+         t.ok(true)
+      },
+      '-a -s -w -g'(argv) {
          t.ok(true)
       },
       '*.js'(argv) {
@@ -37,6 +43,6 @@ test('execute', async t => {
 
    // router.execute('-a -w')
 
-   router.execute('-a -s -w')
+   router.execute('-a -s -w -g')
 
 })

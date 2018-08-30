@@ -3,7 +3,7 @@
 const test = require('jtf');
 const argvRouter = require('..')
 
-test.skip('index', async t => {
+test('index', async t => {
 
    let options = {
       '-v, --version'(argv) {

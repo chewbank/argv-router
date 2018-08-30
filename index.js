@@ -98,7 +98,7 @@ const argvRouter = {
     */
    priority(filter) {
 
-      // 长度优先过滤
+      // 按匹配参数数量优先级过滤
       let maxArgv
       let maxLength = 0
       for (let key in filter) {
@@ -117,14 +117,19 @@ const argvRouter = {
 
       }
 
-      if (Array.isArray(maxArgv)) {
-         // 位置优先匹配
-         for (let item of this.argv) {
-
-         }
-      } else {
+      // 单项匹配
+      if (maxArgv.action) {
          maxArgv.action()
       }
+
+      // 多项匹配时意味着分歧
+      // 为了避免行为混乱，这种情况下不再做任何操作
+      // else if (Array.isArray(maxArgv)) {
+      //    console.log(this.argv)
+      //    console.log(maxArgv)
+      //    按位置优先级过滤
+      //    for (let item of this.argv) {}
+      // }
 
    },
    /**
