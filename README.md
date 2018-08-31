@@ -55,11 +55,13 @@ let options = {
 
    }
 }
+
+argvRouter(options)
 ```
 
 ### 匹配优先级
 
-以匹配参数越多优先级越高原则进行过滤。在同等优先级下为了防止行为混乱，因此不做任何操作。
+以匹配参数越多优先级越高原则进行过滤。在同等优先级下为了避免行为分歧，因此不做任何操作。
 
 
 ### 默认匹配
@@ -68,6 +70,24 @@ let options = {
 
 ```js
 let router = argvRouter(options, '-w -a')
+```
+
+
+### 通配符匹配
+
+在参数中支持通配符模式，用于模糊匹配
+
+```js
+let options = {
+   '*.js'(argv) {
+
+   },
+   '*.js -w'(argv) {
+
+   },
+}
+
+argvRouter(options)
 ```
 
 

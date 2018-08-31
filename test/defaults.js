@@ -17,9 +17,6 @@ test('defaults', async t => {
       },
       '-a -w'(argv) {
          t.ok(false)
-      },
-      '*.js'(argv) {
-         t.ok(false)
       }
    }
 

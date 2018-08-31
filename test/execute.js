@@ -7,42 +7,67 @@ test('execute', async t => {
 
    let options = {
       '-v, --version'(argv) {
-         t.ok(false)
+         t.deepEqual(['-v'], argv)
       },
       '-w, --watch'(argv) {
-         t.ok(true)
+         t.deepEqual(['-w'], argv)
       },
       '-a, --async'(argv) {
-         t.ok(true)
+         t.deepEqual(['-a'], argv)
       },
       '-s, --sync'(argv) {
-         t.ok(true)
+         t.deepEqual(['-s'], argv)
       },
       '-g, --global'(argv) {
-         t.ok(true)
+         t.deepEqual(['-g'], argv)
       },
       '-a -w'(argv) {
-         t.ok(true)
+         t.deepEqual(['-a', '-w'], argv)
       },
       '-a -s'(argv) {
-         t.ok(true)
+         t.deepEqual(['-a', '-s'], argv)
       },
       '-a -s -w -g'(argv) {
          t.ok(true)
       },
       '*.js'(argv) {
-         t.ok(false)
+         console.log(argv)
+         t.ok(true)
+      },
+      '*.js -w'(argv) {
+         console.log(argv)
+         t.ok(true)
+      },
+      '*.js -a'(argv) {
+         console.log(argv)
+         t.ok(true)
+      },
+      '-n <user>'(argv) {
+         console.log(argv)
+         t.ok(true)
+      },
+      'sd'(argv) {
+         console.log(argv)
+         t.ok(true)
       }
    }
 
-   let router = argvRouter(options, '-w')
+   let router = argvRouter(options)
 
-   // router.execute('-w')
+   router.execute('-v')
 
-   // router.execute('-a')
+   router.execute('-w')
 
-   // router.execute('-a -w')
+   router.execute('-a')
+
+   router.execute('-a -w')
 
    router.execute('-a -s -w -g')
+
+   router.execute('12*3.js -w')
+
+   router.execute('tj.js -w')
+
+   router.execute('12*3.js -a')
 
 })

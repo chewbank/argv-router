@@ -5,7 +5,7 @@ const argvRouter = {
     * options分组、合并
     * @param {Object} options 
     */
-   group(options) {
+   analyse(options) {
 
       let or = [] // or类型类型定义简写和全称
       let and = [] // and类型定义多参数匹配
@@ -15,24 +15,39 @@ const argvRouter = {
       for (let express in options) {
 
          let action = options[express]
+
+         // or类型
          if (express.indexOf(',') >= 0) {
-            // or类型
             let [key, value] = express.split(',')
             or.push({
                'argv': { [key.trim()]: value.trim() },
                action
             })
-         } else if (express.indexOf(' ') >= 0) {
-            // and类型
+         }
+
+         // and类型
+         else if (express.indexOf(' ') >= 0) {
             let argvArray = express.split(/\s+/)
             let data = { action, 'argv': {} }
-            for (let item of argvArray) {
-               data.argv[item] = null
+            for (let value of argvArray) {
+               let reg = this.regExp(value)
+               if (reg) {
+                  data.argv._reg = reg
+               } else {
+                  data.argv[value] = null
+               }
             }
             and.push(data)
-         } else {
-            // 单数类型
-            single.push({ action, 'argv': { [express]: null } })
+         }
+
+         // 单参数
+         else {
+            let reg = this.regExp(express)
+            if (reg) {
+               single.push({ action, 'argv': { _reg: reg } })
+            } else {
+               single.push({ action, 'argv': { [express]: null } })
+            }
          }
 
       }
@@ -56,7 +71,20 @@ const argvRouter = {
 
    },
    /**
-    * 过滤
+    * 模糊匹配
+    */
+   regExp(express) {
+
+      // 单参数模糊匹配，使用正则
+      if (express.indexOf('*') >= 0) {
+         let reg = express.replace('.', '\\.')
+         reg = reg.replace(/\*/, '.*')
+         return new RegExp(reg)
+      }
+
+   },
+   /**
+    * 匹配参数过滤
     * @param {Array} argv 原始argv数组
     */
    filter(argv) {
@@ -68,11 +96,27 @@ const argvRouter = {
       for (let item of this.allArgv) {
 
          let match = true
+
          for (let name in item.argv) {
             let value = item.argv[name]
-            if (!(argv.includes(name) || argv.includes(value))) {
+            if (typeof value === 'string') {
+               if (!(argv.includes(name) || argv.includes(value))) {
+                  match = false
+                  break
+               }
+            } else if (value === null) {
+               if (!(argv.includes(name))) {
+                  match = false
+                  break
+               }
+            } else if (value instanceof RegExp) {
                match = false
-               break
+               for (let item of argv) {
+                  if (value.test(item)) {
+                     match = true
+                     break
+                  }
+               }
             }
          }
 
@@ -83,20 +127,24 @@ const argvRouter = {
       }
 
       if (filter.length > 1) {
-         this.priority(filter)
+
+         this.competition(filter)
+
       }
 
       // 仅有一个参数
       else if (filter.length === 1) {
-         filter[0].action()
+
+         filter[0].action(argv)
+
       }
 
    },
    /**
-    * 按最高优先级执行
+    * 获取并执行匹配度最高的action
     * @param {Array} filter 
     */
-   priority(filter) {
+   competition(filter) {
 
       // 按匹配参数数量优先级过滤
       let maxArgv
@@ -104,6 +152,7 @@ const argvRouter = {
       for (let key in filter) {
 
          let item = filter[key]
+
          let { length } = Object.keys(item.argv)
          if (length > maxLength) {
             maxLength = length
@@ -117,9 +166,9 @@ const argvRouter = {
 
       }
 
-      // 单项匹配
+      // 最终匹配项
       if (maxArgv.action) {
-         maxArgv.action()
+         maxArgv.action(this.argv)
       }
 
       // 多项匹配时意味着分歧
@@ -138,7 +187,9 @@ const argvRouter = {
     */
    execute(express) {
 
-      this.filter(express.split(' '))
+      if (express) {
+         this.filter(express.split(' '))
+      }
 
    }
 }
@@ -147,7 +198,7 @@ module.exports = function (options, defaults) {
 
    if (options) {
 
-      argvRouter.group(options)
+      argvRouter.analyse(options)
 
    } else {
 
