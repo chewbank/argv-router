@@ -3,11 +3,11 @@
 const test = require('jtf');
 const argvRouter = require('..')
 
-test.skip('index', async t => {
+test('index', async t => {
 
    let options = {
       '-v, --version'(argv) {
-         t.ok(false)
+         t.deepEqual(['--version'], argv)
       },
       '-w, --watch'(argv) {
          t.ok(true)
@@ -19,15 +19,17 @@ test.skip('index', async t => {
          t.ok(true)
       },
       '-a -w'(argv) {
-         t.ok(false)
+         t.ok(true)
       },
       '-a -s'(argv) {
          t.ok(true)
       }
    }
 
-   let router = argvRouter(options, '-w')
+   let router = argvRouter(options)
 
    router.execute('-a')
+
+   router.execute('--version')
 
 })

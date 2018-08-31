@@ -5,10 +5,7 @@ const argvRouter = require('..')
 
 test('execute', async t => {
 
-   let options = {
-      '-v, --version'(argv) {
-         t.deepEqual(['-v'], argv)
-      },
+   let router = argvRouter({
       '-w, --watch'(argv) {
          t.deepEqual(['-w'], argv)
       },
@@ -17,9 +14,6 @@ test('execute', async t => {
       },
       '-s, --sync'(argv) {
          t.deepEqual(['-s'], argv)
-      },
-      '-g, --global'(argv) {
-         t.deepEqual(['-g'], argv)
       },
       '-a -w'(argv) {
          t.deepEqual(['-a', '-w'], argv)
@@ -50,13 +44,11 @@ test('execute', async t => {
          console.log(argv)
          t.ok(true)
       }
-   }
-
-   let router = argvRouter(options)
+   })
 
    router.execute('-v')
 
-   router.execute('-w')
+   router.execute('-watch')
 
    router.execute('-a')
 

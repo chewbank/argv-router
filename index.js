@@ -52,7 +52,7 @@ const argvRouter = {
 
       }
 
-      // 使用or选项为and选项建立关联
+      // 尝试用or选项为and选项建立关联
       for (let { argv: andArgv } of and) {
          for (let { argv: orArgv } of or) {
             for (let key in orArgv) {
@@ -66,12 +66,12 @@ const argvRouter = {
          }
       }
 
-      // 合并选项队列
+      // 合并选项分组
       this.allArgv = [].concat(or, and, single)
 
    },
    /**
-    * 模糊匹配
+    * 模糊匹配，将*号转为增则表达式
     */
    regExp(express) {
 
@@ -126,13 +126,14 @@ const argvRouter = {
 
       }
 
+      // 复数
       if (filter.length > 1) {
 
          this.competition(filter)
 
       }
 
-      // 仅有一个参数
+      // 单数
       else if (filter.length === 1) {
 
          filter[0].action(argv)
@@ -157,28 +158,18 @@ const argvRouter = {
          if (length > maxLength) {
             maxLength = length
             maxArgv = item
-         } else if (length === maxLength) {
-            if (!Array.isArray(maxArgv)) {
-               maxArgv = [maxArgv]
-            }
-            maxArgv.push(item)
+         }
+         
+         // 存在多个平级匹配分歧，不做任何操作
+         else if (length === maxLength) {
+            maxArgv = null
          }
 
       }
 
-      // 最终匹配项
-      if (maxArgv.action) {
+      if (maxArgv) {
          maxArgv.action(this.argv)
       }
-
-      // 多项匹配时意味着分歧
-      // 为了避免行为混乱，这种情况下不再做任何操作
-      // else if (Array.isArray(maxArgv)) {
-      //    console.log(this.argv)
-      //    console.log(maxArgv)
-      //    按位置优先级过滤
-      //    for (let item of this.argv) {}
-      // }
 
    },
    /**
@@ -194,17 +185,17 @@ const argvRouter = {
    }
 }
 
+
+/**
+ * 
+ * @param {Object} options 选项
+ * @param {String} defaults 默认配置
+ */
 module.exports = function (options, defaults) {
 
-   if (options) {
+   if (!options) return
 
-      argvRouter.analyse(options)
-
-   } else {
-
-      return
-
-   }
+   argvRouter.analyse(options)
 
    let [, , ...processArgv] = process.argv
 

@@ -6,9 +6,6 @@ const argvRouter = require('..')
 test('defaults', async t => {
 
    let options = {
-      '-v, --version'(argv) {
-         t.ok(false)
-      },
       '-w, --watch'(argv) {
          t.ok(true)
       },
@@ -16,10 +13,10 @@ test('defaults', async t => {
          t.ok(true)
       },
       '-a -w'(argv) {
-         t.ok(false)
+         t.deepEqual(['-a', '-w'], argv)
       }
    }
 
-   argvRouter(options, '-a')
+   argvRouter(options, '-a -w')
 
 })
