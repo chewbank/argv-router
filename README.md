@@ -8,7 +8,7 @@ npm install argv-router
 
 匹配表达式分为单参数和组合参数两种，不可混合使用
 
-### 单参数
+#### 单参数
 
 单参数时直接指定参数名即可，使用简写、全称命名时用英文逗号分隔
 
@@ -25,7 +25,7 @@ argvRouter({
 })
 ```
 
-### 组合参数
+#### 组合参数
 
 组合参数时，多个参数使用空格分隔
 
@@ -39,7 +39,27 @@ argvRouter({
 })
 ```
 
-### 参数值
+### 自动扩展
+
+在使用组合参数时可以搭配单参数实现自动扩展，使用单参数中的任意简写或全称命名。如以下示例中组合参数“-a -w”会尝试匹配“-a -w”、“-a --watch”、“--async -w”、“--async --watch”。
+
+```js
+let options = {
+   '-w, --watch'(argv) {
+
+   },
+   '-a, --async'(argv) {
+
+   },
+   '-a -w'(argv) {
+
+   }
+}
+
+argvRouter(options)
+```
+
+### 参数值匹配
 
 通过“<>”占位符号定义使用启用参数值
 
@@ -65,26 +85,6 @@ argvRouter({
       console.log(argv.files)
    },
 })
-```
-
-#### 自动扩展
-
-在使用组合参数时可以搭配单参数实现自动扩展，可以使用单参数中的任意简写或全称命名。如以下示例中参数“-a -w”会尝试匹配“-a -w”、“-a --watch”、“--async -w”、“--async --watch”。
-
-```js
-let options = {
-   '-w, --watch'(argv) {
-
-   },
-   '-a, --async'(argv) {
-
-   },
-   '-a -w'(argv) {
-
-   }
-}
-
-argvRouter(options)
 ```
 
 ### 匹配优先级
