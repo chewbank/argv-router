@@ -2,131 +2,176 @@
 
 const argvRouter = {
    /**
-    * options分组、合并
+    * 解析options
     * @param {Object} options 
     */
    analyse(options) {
 
-      let or = [] // or类型类型定义简写和全称
-      let and = [] // and类型定义多参数匹配
-      let single = []
+      let link = {} // 扁平化引用关系网
+      let combination = {} //多参数组合类型
+      let container = [] // 解析后的结构化匹配队列
 
-      // 选项类型分组
+      // 单数类型，与组合类型分开处理
       for (let express in options) {
 
          let action = options[express]
 
-         // or类型
+         // 逗号分隔表示单数类型
          if (express.indexOf(',') >= 0) {
-            let [key, value] = express.split(',')
-            or.push({
-               'argv': { [key.trim()]: value.trim() },
-               action
-            })
-         }
 
-         // and类型
-         else if (express.indexOf(' ') >= 0) {
-            let argvArray = express.split(/\s+/)
-            let data = { action, 'argv': {} }
-            for (let value of argvArray) {
-               let reg = this.regExp(value)
-               if (reg) {
-                  data.argv._reg = reg
-               } else {
-                  data.argv[value] = null
-               }
+            let argv = {}
+
+            let [logogram, fullName, value] = express.split(/\s*,\s*/)
+
+            if (logogram) {
+               argv[logogram] = value
+               link[logogram] = argv
             }
-            and.push(data)
+
+            if (fullName) {
+               argv[fullName] = value
+               link[fullName] = argv
+            }
+
+            container.push({ argv: [argv], value: {}, action })
+
          }
 
-         // 单参数
+         // 组合类型
          else {
-            let reg = this.regExp(express)
-            if (reg) {
-               single.push({ action, 'argv': { _reg: reg } })
-            } else {
-               single.push({ action, 'argv': { [express]: null } })
-            }
+
+            combination[express] = action
+
          }
 
       }
 
-      // 尝试用or选项为and选项建立关联
-      for (let { argv: andArgv } of and) {
-         for (let { argv: orArgv } of or) {
-            for (let key in orArgv) {
-               let value = orArgv[key]
-               if (andArgv[key] === null) {
-                  andArgv[key] = value
-               } else if (andArgv[value] === null) {
-                  andArgv[value] = key
+      // 组合类型，在单数类型处理完毕后，尝试进行参数关联
+      for (let express in combination) {
+
+         let action = combination[express]
+
+         let argv = [], other
+         let argvArray = express.split(/\s+/)
+
+         let key = 0
+         while (key < argvArray.length) {
+
+            let name = argvArray[key]
+            if (name.match(/^-{1,2}.+/)) {
+
+               let value = argvArray[key + 1]
+               if (value && value.match(/^<.*>$/)) {
+                  key += 2
+               } else {
+                  key++
                }
+
+               if (link[name]) {
+                  argv.push(link[name])
+               } else {
+                  link[name] = { [name]: value || null }
+                  argv.push(link[name])
+               }
+
+            } else {
+
+               let match = name.match(/^\[(.*)\]$/)
+
+               if (match) {
+                  other = match[1]
+               }
+
+               key++
+
             }
+
          }
+
+         container.push({ argv, value: {}, action, other })
+
       }
 
-      // 合并选项分组
-      this.allArgv = [].concat(or, and, single)
+      this.container = container
 
    },
    /**
-    * 模糊匹配，将*号转为增则表达式
-    */
-   regExp(express) {
-
-      // 单参数模糊匹配，使用正则
-      if (express.indexOf('*') >= 0) {
-         let reg = express.replace('.', '\\.')
-         reg = reg.replace(/\*/, '.*')
-         return new RegExp(reg)
-      }
-
-   },
-   /**
-    * 匹配参数过滤
+    * argv参数解析、过滤
     * @param {Array} argv 原始argv数组
     */
    filter(argv) {
 
-      this.argv = argv
+      let last // 上一个参数
+      let cache = {} // 带有key的键值对
+      let other = [] // 没有key的其它参数
 
-      // 入参匹配，and过滤
-      let filter = []
-      for (let item of this.allArgv) {
+      // 解析argv
+      for (let item of argv) {
 
-         let match = true
-
-         for (let name in item.argv) {
-            let value = item.argv[name]
-            if (typeof value === 'string') {
-               if (!(argv.includes(name) || argv.includes(value))) {
-                  match = false
-                  break
-               }
-            } else if (value === null) {
-               if (!(argv.includes(name))) {
-                  match = false
-                  break
-               }
-            } else if (value instanceof RegExp) {
-               match = false
-               for (let item of argv) {
-                  if (value.test(item)) {
-                     match = true
-                     break
-                  }
-               }
+         if (item.match(/^-{1,2}.+/)) {
+            cache[item] = null
+         } else {
+            if (cache[last] === null) {
+               cache[last] = item
+            } else {
+               other.push(item)
             }
          }
 
-         if (match) {
+         last = item
+
+      }
+
+      let filter = []
+
+      for (let item of this.container) {
+
+         let andMatch = true
+         let itemOther = []
+
+         // and匹配，必须同时满足多个条件
+         for (let orItemArgv of item.argv) {
+
+            let orMatch = false
+
+            // or匹配，满足多个条件中的一个即可
+            for (let name in orItemArgv) {
+
+               let value = cache[name]
+               if (value !== undefined) {
+                  if (orItemArgv[name] !== '<>') {
+                     if (value) {
+                        itemOther.push(value)
+                     }
+                     value = null
+                  }
+                  // 将值同时赋值给全称和别称
+                  for (let name in orItemArgv) {
+                     item.value[name] = value
+                  }
+                  orMatch = true
+                  break
+               }
+
+            }
+
+            if (orMatch === false) {
+               andMatch = false
+               break
+            }
+
+         }
+
+         if (andMatch) {
+            if (item.other) {
+               item.value[item.other] = other.concat(itemOther)
+            }
             filter.push(item)
          }
 
       }
 
-      // 复数
+      // 复数，竞选模式
       if (filter.length > 1) {
 
          this.competition(filter)
@@ -136,39 +181,64 @@ const argvRouter = {
       // 单数
       else if (filter.length === 1) {
 
-         filter[0].action(argv)
+         let [item] = filter
+
+         item.action(item.value)
 
       }
 
    },
    /**
-    * 获取并执行匹配度最高的action
+    * 竞选、执行最高匹配项
     * @param {Array} filter 
     */
-   competition(filter) {
+   competition(filter = []) {
 
       // 按匹配参数数量优先级过滤
       let maxArgv
       let maxLength = 0
-      for (let key in filter) {
 
-         let item = filter[key]
+      // 按argv长度取最大值
+      for (let item of filter) {
 
-         let { length } = Object.keys(item.argv)
+         let { length } = item.argv
          if (length > maxLength) {
             maxLength = length
             maxArgv = item
          }
-         
+
          // 存在多个平级匹配分歧，不做任何操作
          else if (length === maxLength) {
-            maxArgv = null
+            if (!Array.isArray(maxArgv)) {
+               maxArgv = [maxArgv]
+            }
+            maxArgv.push(item)
          }
 
       }
 
-      if (maxArgv) {
-         maxArgv.action(this.argv)
+      if (maxArgv.action) {
+
+         maxArgv.action(maxArgv.value)
+
+      } else {
+
+         let maxValue
+
+         // 带有other的匹配项，优先级高于其它匹配项
+         for (let item of maxArgv) {
+            if (item.other && item.value[item.other].length) {
+               maxValue = item
+            }
+         }
+
+         if (maxValue) {
+            maxValue.action(maxValue.value)
+         } else {
+            let [maxValue] = maxArgv
+            maxValue.action(maxValue.value)
+         }
+
       }
 
    },

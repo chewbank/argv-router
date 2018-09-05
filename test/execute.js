@@ -7,59 +7,60 @@ test('execute', async t => {
 
    let router = argvRouter({
       '-w, --watch'(argv) {
-         t.deepEqual(['-w'], argv)
+         t.ok(false)
       },
       '-a, --async'(argv) {
-         t.deepEqual(['-a'], argv)
+         t.ok(false)
       },
       '-s, --sync'(argv) {
-         t.deepEqual(['-s'], argv)
+         t.ok(false)
       },
       '-a -w'(argv) {
-         t.deepEqual(['-a', '-w'], argv)
+         t.deepEqual({
+            '-a': null,
+            '--async': null,
+            '-w': null,
+            '--watch': null
+         }, argv)
       },
-      '-a -s'(argv) {
-         t.deepEqual(['-a', '-s'], argv)
+      '-a -s -w'(argv) {
+         t.deepEqual({
+            '-a': null,
+            '--async': null,
+            '-s': null,
+            '--sync': null,
+            '-w': null,
+            '--watch': null
+         }, argv)
       },
-      '-a -s -w -g'(argv) {
-         t.ok(true)
+      '[arr]'(argv) {
+         t.deepEqual({
+            arr: ['tj.js', '123.js', '456.js']
+         }, argv)
       },
-      '*.js'(argv) {
-         console.log(argv)
-         t.ok(true)
+      '[arr] -w'(argv) {
+         t.deepEqual({
+            '-w': null,
+            '--watch': null,
+            arr: ['123.js', '456.js']
+         }, argv)
       },
-      '*.js -w'(argv) {
-         console.log(argv)
-         t.ok(true)
-      },
-      '*.js -a'(argv) {
-         console.log(argv)
-         t.ok(true)
-      },
-      '-n <user>'(argv) {
-         console.log(argv)
-         t.ok(true)
-      },
-      'sd'(argv) {
-         console.log(argv)
-         t.ok(true)
+      '[arr] -g <>'(argv) {
+         t.deepEqual({
+            '-g': '555',
+            arr: ['12*3.js']
+         }, argv)
       }
    })
-
-   router.execute('-v')
-
-   router.execute('-watch')
-
-   router.execute('-a')
 
    router.execute('-a -w')
 
    router.execute('-a -s -w -g')
 
-   router.execute('12*3.js -w')
+   router.execute('tj.js 123.js 456.js')
 
-   router.execute('tj.js -w')
+   router.execute('123.js 456.js -w')
 
-   router.execute('12*3.js -a')
+   router.execute('12*3.js -g 555')
 
 })

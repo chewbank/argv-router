@@ -17,10 +17,10 @@ const argvRouter = require('argv-router')
 
 argvRouter({
    '-v'(argv) {
-      console.log('-v')
+      console.log(argv)
    },
    '-w, --watch'(argv) {
-      console.log('-w, --watch')
+      console.log(argv)
    }
 })
 ```
@@ -34,7 +34,35 @@ const argvRouter = require('argv-router')
 
 argvRouter({
    '-a -w'(argv) {
-      console.log('-a -w')
+      console.log(argv)
+   },
+})
+```
+
+### 参数值
+
+通过“<>”占位符号定义使用启用参数值
+
+```js
+const argvRouter = require('argv-router')
+
+argvRouter({
+   '-a <> -w <>'(argv) {
+      console.log(argv)
+   },
+})
+```
+
+### 快速赋值
+
+通过“[$name]”定义是否启用无参数名的快捷赋值选项，在argv中返回一个以“$name”命名的匹配项数组
+
+```js
+const argvRouter = require('argv-router')
+
+argvRouter({
+   '[files] -a <> -w <>'(argv) {
+      console.log(argv.files)
    },
 })
 ```
@@ -61,7 +89,7 @@ argvRouter(options)
 
 ### 匹配优先级
 
-以匹配参数越多优先级越高原则进行过滤。在同等优先级下为了避免行为分歧，因此不做任何操作。
+首先按匹配参数数量进行升级，匹配参数越多优先级越高。在等量参数数量下，包含快速赋值的匹配项先级高于其它选项。
 
 
 ### 默认匹配
@@ -69,25 +97,16 @@ argvRouter(options)
 在参数为空时指定默认行为
 
 ```js
-let router = argvRouter(options, '-w -a')
-```
-
-
-### 通配符匹配
-
-在参数中支持通配符模式，用于模糊匹配
-
-```js
 let options = {
-   '*.js'(argv) {
+   '-w, --watch'(argv) {
 
    },
-   '*.js -w'(argv) {
+   '-a, --async'(argv) {
 
-   },
+   }
 }
 
-argvRouter(options)
+let router = argvRouter(options, '-w')
 ```
 
 
