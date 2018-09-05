@@ -61,7 +61,7 @@ argvRouter(options)
 
 ### 参数值匹配
 
-通过“<>”占位符号定义使用启用参数值
+通过“<>”占位符号定义是否启用参数值
 
 ```js
 const argvRouter = require('argv-router')
