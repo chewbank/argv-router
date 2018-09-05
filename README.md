@@ -16,10 +16,10 @@ npm install argv-router
 const argvRouter = require('argv-router')
 
 argvRouter({
-   '-v'(argv) {
+   '-v, --version'(argv) {
       console.log(argv)
    },
-   '-w, --watch'(argv) {
+   '-w, --watch, <>'(argv) {
       console.log(argv)
    }
 })
