@@ -101,21 +101,24 @@ const argvRouter = {
     */
    filter(argv) {
 
-      let last // 上一个参数
+      let last // 上一个参数名
       let cache = {} // 带有key的键值对
       let other = [] // 没有key的其它参数
 
       // 解析argv
       for (let item of argv) {
 
+         // 参数名
          if (item.match(/^-{1,2}.+/)) {
             cache[item] = null
-         } else {
-            if (cache[last] === null) {
-               cache[last] = item
-            } else {
-               other.push(item)
-            }
+         }
+         // 参数值
+         else if (cache[last] === null) {
+            cache[last] = item
+         }
+         // 无名的参数值
+         else {
+            other.push(item)
          }
 
          last = item
@@ -171,14 +174,14 @@ const argvRouter = {
 
       }
 
-      // 复数，竞选模式
+      // 复数，竞选匹配
       if (filter.length > 1) {
 
          this.competition(filter)
 
       }
 
-      // 单数
+      // 单数，直接运行
       else if (filter.length === 1) {
 
          let [item] = filter

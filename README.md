@@ -61,7 +61,7 @@ argvRouter(options)
 
 ### 参数值匹配
 
-通过“<>”占位符号定义是否启用参数值
+通过“<>”占位符号定义是否匹配参数值
 
 ```js
 const argvRouter = require('argv-router')
@@ -121,3 +121,7 @@ router.execute('-v')
 
 router.execute('-w -a')
 ```
+
+### 注意事项
+
+参数名必须使用“--”或“-”，否则视为语法错误。
